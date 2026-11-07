@@ -4,8 +4,8 @@ Painel em Streamlit que gera **previsões de curto prazo (3 a 15 pregões)** par
 combinando três sinais:
 
 1. **Técnico**: tendência (MM20 × MM50), momento de 5 e 20 dias e RSI.
-2. **Notícias**: manchetes dos últimos 7 dias (Google Notícias + InfoMoney, Money Times, Valor,
-   Investing) com análise de sentimento em português, marcadas por empresa e setor.
+2. **Notícias**: manchetes dos últimos 7 dias (Google Notícias + InfoMoney, Money Times e Valor)
+   com análise de sentimento em português, marcadas por empresa e setor.
 3. **Cenário político/macro**: sete fatores lidos das manchetes (risco fiscal, Selic, câmbio,
    intervenção em estatais, governabilidade/eleições, commodities, cenário externo), aplicados a
    uma matriz de exposição setorial. As estatais (PETR4, BBAS3) têm sensibilidade extra a interferência.

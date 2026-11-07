@@ -39,10 +39,14 @@ def technical_frame(close: pd.Series) -> pd.DataFrame:
     df["ma50"] = close.rolling(50).mean()
     df["rsi"] = rsi(close)
     df["vol_20d"] = ret.rolling(20).std()
+    # Volatilidade robusta: desvio absoluto mediano (x1,4826), pouco afetado por um único dia extremo.
+    mad = ret.rolling(20).apply(lambda x: np.median(np.abs(x - np.median(x))), raw=True) * 1.4826
+    df["vol_robust"] = mad.fillna(df["vol_20d"])
+    df["max_jump_20d"] = ret.abs().rolling(20).max()
     # Score técnico: tendência + momento, com reversão em extremos de RSI.
     trend = np.tanh(((df["ma20"] / df["ma50"]) - 1) * 25)
-    mom = np.tanh(df["ret_20d"] / (df["vol_20d"] * np.sqrt(20) + 1e-9) * 0.6)
-    short = np.tanh(df["ret_5d"] / (df["vol_20d"] * np.sqrt(5) + 1e-9) * 0.4)
+    mom = np.tanh(df["ret_20d"] / (df["vol_robust"] * np.sqrt(20) + 1e-9) * 0.6)
+    short = np.tanh(df["ret_5d"] / (df["vol_robust"] * np.sqrt(5) + 1e-9) * 0.4)
     rsi_adj = np.where(df["rsi"] > 75, -0.4, np.where(df["rsi"] < 25, 0.4, 0.0))
     df["tech_score"] = np.clip(0.4 * trend + 0.35 * mom + 0.25 * short + rsi_adj, -1, 1)
     return df

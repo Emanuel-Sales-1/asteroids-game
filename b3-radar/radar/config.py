@@ -30,15 +30,15 @@ UNIVERSE: list[Stock] = [
     Stock("ABEV3", "Ambev", "Consumo", ("ambev", "abev3")),
     Stock("MGLU3", "Magazine Luiza", "Varejo", ("magazine luiza", "magalu", "mglu3")),
     Stock("LREN3", "Lojas Renner", "Varejo", ("renner", "lren3")),
-    Stock("ELET3", "Eletrobras", "Energia Elétrica", ("eletrobras", "elet3", "elet6")),
+    Stock("AXIA3", "Axia Energia (ex-Eletrobras)", "Energia Elétrica", ("axia", "axia energia", "axia3", "eletrobras", "elet3", "elet6")),
     Stock("EGIE3", "Engie Brasil", "Energia Elétrica", ("engie", "egie3")),
     Stock("SBSP3", "Sabesp", "Saneamento", ("sabesp", "sbsp3")),
     Stock("SUZB3", "Suzano", "Papel e Celulose", ("suzano", "suzb3")),
-    Stock("JBSS3", "JBS", "Proteínas", ("jbs", "jbss3")),
+    Stock("JBSS32", "JBS (BDR)", "Proteínas", ("jbs", "jbss3", "jbss32")),
     Stock("CYRE3", "Cyrela", "Construção Civil", ("cyrela", "cyre3")),
     Stock("RENT3", "Localiza", "Locação", ("localiza", "rent3")),
     Stock("RADL3", "Raia Drogasil", "Saúde/Varejo", ("raia drogasil", "raiadrogasil", "radl3")),
-    Stock("EMBR3", "Embraer", "Aeroespacial", ("embraer", "embr3")),
+    Stock("EMBJ3", "Embraer", "Aeroespacial", ("embraer", "embr3", "embj3")),
 ]
 
 BENCHMARK = "^BVSP"
@@ -86,6 +86,19 @@ FACTORS: dict[str, dict] = {
     },
 }
 
+# Fatores ambíguos só contam quando a notícia tem contexto brasileiro/estatal explícito,
+# para não misturar política de outros países ou usos médicos/esportivos das palavras.
+FACTOR_CONTEXT: dict[str, list[str]] = {
+    "governabilidade": ["brasil", "brasileiro", "brasileira", "lula", "planalto", "congresso nacional",
+                        "câmara dos deputados", "camara dos deputados", "senado federal", "stf", "tse",
+                        "governo federal", "governo lula", "haddad", "alcolumbre", "hugo motta",
+                        "flávio bolsonaro", "flavio bolsonaro", "bolsonaro", "tarcísio", "tarcisio",
+                        "ibovespa", "b3", "pt ", "centrão", "centrao", "esplanada"],
+    "intervencao_estatal": ["petrobras", "banco do brasil", "caixa econômica", "caixa economica", "bndes",
+                            "correios", "estatal", "estatais", "governo federal", "governo lula", "lula",
+                            "planalto", "conselho de administração", "conselho de administracao"],
+}
+
 # Sensibilidade setorial: retorno tende a cair quando o fator piora (valores negativos)
 # e a subir quando melhora. Escala aproximada -1..+1.
 SECTOR_EXPOSURE: dict[str, dict[str, float]] = {
@@ -126,5 +139,4 @@ DIRECT_FEEDS = [
     "https://www.infomoney.com.br/feed/",
     "https://www.moneytimes.com.br/feed/",
     "https://valor.globo.com/rss/valor/",
-    "https://www.investing.com/rss/news_356.rss",  # Brasil (pode estar em inglês)
 ]

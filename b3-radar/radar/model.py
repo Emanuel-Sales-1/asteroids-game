@@ -47,6 +47,7 @@ class Forecast:
     rsi: float
     vol_daily: float
     backtest: dict
+    max_jump_20d: float = 0.0
     factor_contrib: dict[str, float] = field(default_factory=dict)
     headlines: list[Article] = field(default_factory=list)
     rationale: str = ""
@@ -116,7 +117,7 @@ def build_forecasts(prices: pd.DataFrame, articles: list[Article], scenario: dic
             composite = 0.7 * composite + 0.3 * adj
         composite = float(np.clip(composite, -1, 1))
 
-        vol = float(tf["vol_20d"]) if not math.isnan(tf["vol_20d"]) else 0.02
+        vol = float(tf["vol_robust"]) if not math.isnan(tf["vol_robust"]) else 0.02
         sigma_h = vol * math.sqrt(horizon)
         # Sinais de curto prazo têm poder preditivo modesto: limitamos a ~0,35σ.
         exp_ret = composite * 0.35 * sigma_h
@@ -130,7 +131,8 @@ def build_forecasts(prices: pd.DataFrame, articles: list[Article], scenario: dic
             confidence=confidence_label([tech, news, pol], len(heads)), recommendation=rec,
             stop=price * (1 - 1.5 * sigma_h), target=price * (1 + max(exp_ret, 0) + sigma_h),
             n_news=len(heads), rsi=float(tf["rsi"]), vol_daily=vol,
-            backtest=backtest_technical(close, horizon), factor_contrib=contrib, headlines=heads[:8],
+            backtest=backtest_technical(close, horizon), max_jump_20d=float(tf["max_jump_20d"]),
+            factor_contrib=contrib, headlines=heads[:8],
             rationale=adj_info.get("justificativa", ""),
         ))
     return sorted(out, key=lambda f: f.composite, reverse=True)

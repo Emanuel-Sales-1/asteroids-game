@@ -56,3 +56,10 @@ def test_end_to_end_demo():
 
 def test_classify():
     assert classify(0.5) == "Compra forte" and classify(0) == "Neutro" and classify(-0.5) == "Evitar / Venda"
+
+
+def test_foreign_politics_not_counted_as_brazilian_governability():
+    [us] = tag_articles([art("Vance culpa guerra no Irã por derrota republicana e busca espaço para 2028")])
+    [br] = tag_articles([art("Governo Lula sofre derrota no Congresso em votação de MP")])
+    assert "governabilidade" not in us.factors
+    assert "governabilidade" in br.factors

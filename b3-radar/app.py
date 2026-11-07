@@ -114,6 +114,11 @@ risk = sum(r.score for r in scenario.values()) / len(scenario)
 c4.metric("Termômetro de risco", f"{risk:+.2f}", "piorando" if risk > 0.05 else "melhorando" if risk < -0.05 else "estável",
           delta_color="inverse" if abs(risk) > 0.05 else "off")
 st.caption(f"Dados carregados em {loaded_at:%d/%m/%Y %H:%M} · fonte: {mode}")
+jumpy = [f for f in forecasts if f.max_jump_20d >= 0.10]
+if jumpy:
+    st.info(f"**Choque recente:** {len(jumpy)} ações tiveram movimentos diários acima de 10% nos últimos "
+            f"20 pregões (ex.: {', '.join(f'{f.ticker} {f.max_jump_20d:.0%}' for f in sorted(jumpy, key=lambda f: -f.max_jump_20d)[:4])}). "
+            "As faixas usam volatilidade robusta e podem subestimar o risco de novos saltos.", icon="⚡")
 
 tab_rec, tab_pol, tab_stock, tab_news, tab_method = st.tabs(
     ["🏆 Recomendações", "🏛️ Cenário político", "🔍 Ação detalhada", "📰 Notícias", "📐 Metodologia"])
@@ -234,7 +239,7 @@ with tab_stock:
                 st.caption(f"Backtest do sinal técnico (1 ano, {horizon} pregões): acerto de direção "
                            f"{bt['hit_rate']:.0%} em {bt['n']} sinais. Notícias não entram no backtest "
                            "por falta de histórico.")
-            st.caption(f"Volatilidade diária: {f.vol_daily:.2%} · stop sugerido R\\$ {f.stop:.2f} · alvo R\\$ {f.target:.2f}")
+            st.caption(f"Volatilidade diária (robusta): {f.vol_daily:.2%} · maior salto em 20 pregões: {f.max_jump_20d:.0%} · stop sugerido R\\$ {f.stop:.2f} · alvo R\\$ {f.target:.2f}")
         with right:
             st.markdown("**Contribuição de cada fator político/macro**")
             contrib = pd.Series({config.FACTORS[k]["label"]: v for k, v in f.factor_contrib.items()}).sort_values()
@@ -271,8 +276,8 @@ with tab_method:
 ### Como o score é calculado
 1. **Técnico** — tendência (MM20 vs MM50), momento de 20 e 5 dias normalizado pela volatilidade
    e reversão em extremos do RSI(14). Escala −1 a +1.
-2. **Notícias** — manchetes dos últimos 7 dias (Google Notícias + feeds de InfoMoney, Money Times,
-   Valor e Investing). Cada manchete recebe um sentimento léxico em português; menções diretas à
+2. **Notícias** — manchetes dos últimos 7 dias (Google Notícias + feeds de InfoMoney, Money Times e
+   Valor). Cada manchete recebe um sentimento léxico em português; menções diretas à
    empresa pesam 1, notícias do setor pesam 0,3, com decaimento exponencial (meia-vida configurável)
    e encolhimento para zero quando há poucas notícias.
 3. **Cenário político/macro** — sete fatores (risco fiscal, Selic, câmbio, intervenção em estatais,
@@ -283,9 +288,12 @@ with tab_method:
    ajuste por ação com justificativa. A leitura da IA entra com 50% no cenário e 30% no score final.
 
 **Score final** = média ponderada dos sinais (pesos na barra lateral).
-**Retorno esperado** = score × 0,35 × σ(horizonte), onde σ é a volatilidade de 20 dias. O fator 0,35
+**Retorno esperado** = score × 0,35 × σ(horizonte), onde σ é a volatilidade robusta de 20 dias
+(desvio absoluto mediano, que não é dominado por um único dia extremo). O fator 0,35
 é deliberadamente conservador: sinais de curto prazo explicam pouco da variação dos preços.
-A **faixa provável** é ±1σ e a **probabilidade de alta** assume distribuição normal.
+A **faixa provável** é ±1σ e a **probabilidade de alta** assume distribuição normal. Em períodos de
+choque (eleições, decisões surpresa) os saltos podem ser bem maiores que essa faixa: o app avisa
+quando alguma ação teve um movimento diário acima de 10% nos últimos 20 pregões.
 
 | Score | Classificação |
 |---|---|

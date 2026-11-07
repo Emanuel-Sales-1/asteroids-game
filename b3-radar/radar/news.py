@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
-from .config import DIRECT_FEEDS, FACTORS, NEWS_QUERIES, UNIVERSE
+from .config import DIRECT_FEEDS, FACTOR_CONTEXT, FACTORS, NEWS_QUERIES, UNIVERSE
 from .sentiment import normalize, score_text
 
 GOOGLE_NEWS = "https://news.google.com/rss/search?q={q}+when:7d&hl=pt-BR&gl=BR&ceid=BR:pt-419"
@@ -112,5 +112,7 @@ def tag_articles(articles: list[Article]) -> list[Article]:
         a.tickers = [s.ticker for s in UNIVERSE
                      if _contains(norm, s.ticker) or any(_contains(norm, al) for al in s.aliases)
                      or any(re.search(rf"\b{re.escape(al)}\b(?!\s+a\s+pena)", a.text) for al in s.cased_aliases)]
-        a.factors = [f for f, cfg in FACTORS.items() if any(_contains(norm, k) for k in cfg["keywords"])]
+        a.factors = [f for f, cfg in FACTORS.items()
+                     if any(_contains(norm, k) for k in cfg["keywords"])
+                     and (f not in FACTOR_CONTEXT or any(_contains(norm, c.strip()) for c in FACTOR_CONTEXT[f]))]
     return articles
