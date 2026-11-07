@@ -1,0 +1,10 @@
+streamlit>=1.40
+pandas>=2.2
+numpy>=1.26
+yfinance>=0.2.50
+feedparser>=6.0
+plotly>=5.24
+matplotlib>=3.8
+anthropic>=2.0
+pydantic>=2.7
+pytest>=8.0
